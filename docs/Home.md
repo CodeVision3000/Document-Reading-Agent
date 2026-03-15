@@ -11,6 +11,7 @@ Welcome to the **Document Reading Agent** wiki! This project is an AI-powered co
 3. [Quick Start](#quick-start)
 4. [Project Structure](#project-structure)
 5. [Pages](#pages)
+6. [Deployment](Deployment.md)
 
 ---
 
@@ -89,3 +90,4 @@ Document-Reading-Agent/
 | [Architecture](Architecture.md) | Module overview and data-flow diagram |
 | [API Reference](API-Reference.md) | Detailed class and method documentation |
 | [Contributing](Contributing.md) | How to contribute to the project |
+| [Deployment](Deployment.md) | Work instruction for deploying the agent in production or shared-team environments |
