@@ -7,7 +7,7 @@ import os
 class DocumentReader:
     """Reads documents of various formats and returns their text content."""
 
-    SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".docx"}
+    SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".docx", ".xlsx"}
 
     def read(self, file_path: str) -> str:
         """
@@ -38,6 +38,8 @@ class DocumentReader:
             return self._read_pdf(file_path)
         elif ext == ".docx":
             return self._read_docx(file_path)
+        elif ext == ".xlsx":
+            return self._read_xlsx(file_path)
 
         raise ValueError(f"Unsupported file format: {ext}")
 
@@ -60,3 +62,18 @@ class DocumentReader:
             return "\n".join(paragraph.text for paragraph in doc.paragraphs)
         except ImportError:
             raise ImportError("python-docx is required to read DOCX files. Install it with: pip install python-docx")
+
+    def _read_xlsx(self, file_path: str) -> str:
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(file_path, data_only=True)
+            lines = []
+            for sheet in wb.worksheets:
+                lines.append(f"[Sheet: {sheet.title}]")
+                for row in sheet.iter_rows(values_only=True):
+                    row_text = " | ".join("" if cell is None else str(cell).replace(" | ", " ") for cell in row)
+                    if row_text.strip():
+                        lines.append(row_text)
+            return "\n".join(lines)
+        except ImportError:
+            raise ImportError("openpyxl is required to read XLSX files. Install it with: pip install openpyxl")
