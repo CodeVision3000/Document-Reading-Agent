@@ -25,10 +25,12 @@ def _load_documents(reader: DocumentReader, paths: list[str]) -> dict[str, str]:
     return doc_contents
 
 
-def _resolve_query(args: argparse.Namespace, speech: SpeechProcessor | None) -> str | None:
-    if args.query and args.audio_query:
-        raise ValueError("Use either --query or --audio-query, not both.")
-
+def _resolve_query(
+    args: argparse.Namespace,
+    speech: SpeechProcessor | None,
+    *,
+    allow_text_query: bool = True,
+) -> str | None:
     if args.audio_query:
         if speech is None:
             speech = SpeechProcessor(
@@ -40,7 +42,7 @@ def _resolve_query(args: argparse.Namespace, speech: SpeechProcessor | None) -> 
         print(f"Transcribed query: {query}")
         return query
 
-    return args.query
+    return args.query if allow_text_query else None
 
 
 def _emit_speech(args: argparse.Namespace, speech: SpeechProcessor | None, text: str) -> None:
@@ -115,6 +117,9 @@ def main():
     if args.kb_query and not (args.knowledge_base or args.create_knowledge_base):
         parser.error("--kb-query requires --knowledge-base or --create-knowledge-base.")
 
+    if args.query and (args.knowledge_base or args.create_knowledge_base):
+        parser.error("--query is only supported in single-document mode. Use --kb-query for knowledge-base questions.")
+
     if args.knowledge_base and args.documents and not args.create_knowledge_base:
         parser.error("--knowledge-base cannot be combined with --document unless you are also creating a knowledge base.")
 
@@ -141,7 +146,7 @@ def main():
             f"({'with embeddings' if build_result['embeddings_added'] else 'lexical only'})."
         )
 
-        kb_query = args.kb_query or _resolve_query(args, speech)
+        kb_query = args.kb_query or _resolve_query(args, speech, allow_text_query=False)
         if not kb_query:
             return
 
@@ -154,13 +159,13 @@ def main():
             answer = Extractor().answer_question(context, kb_query)
             print(f"\nAnswer: {answer}")
             _emit_speech(args, speech, answer)
-        except Exception:
-            print("\nLLM answer unavailable. Showing retrieved knowledge-base passages only.")
+        except Exception as exc:
+            print(f"\nLLM answer unavailable ({exc}). Showing retrieved knowledge-base passages only.")
             _emit_speech(args, speech, context)
         return
 
     if args.knowledge_base:
-        kb_query = args.kb_query or _resolve_query(args, speech)
+        kb_query = args.kb_query or _resolve_query(args, speech, allow_text_query=False)
         if not kb_query:
             parser.error("A query is required when using --knowledge-base.")
 
@@ -173,8 +178,8 @@ def main():
             answer = Extractor().answer_question(context, kb_query)
             print(f"\nAnswer: {answer}")
             _emit_speech(args, speech, answer)
-        except Exception:
-            print("\nLLM answer unavailable. Showing retrieved knowledge-base passages only.")
+        except Exception as exc:
+            print(f"\nLLM answer unavailable ({exc}). Showing retrieved knowledge-base passages only.")
             _emit_speech(args, speech, context)
         return
 

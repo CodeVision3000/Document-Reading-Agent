@@ -72,7 +72,8 @@ class KnowledgeBase:
         if not chunks:
             return []
 
-        if payload.get("embedding_model") and os.getenv("OPENAI_API_KEY"):
+        has_embeddings = any(chunk.get("embedding") for chunk in chunks[: min(len(chunks), 10)])
+        if payload.get("embedding_model") and has_embeddings:
             try:
                 query_embedding = self._embed_texts([query])[0]
                 return self._semantic_search(chunks, query_embedding, top_k)
@@ -111,11 +112,12 @@ class KnowledgeBase:
 
     def _semantic_search(self, chunks: List[dict], query_embedding: List[float], top_k: int) -> List[dict]:
         scored = []
+        query_norm = math.sqrt(sum(value * value for value in query_embedding))
         for chunk in chunks:
             embedding = chunk.get("embedding")
             if not embedding:
                 continue
-            score = self._cosine_similarity(query_embedding, embedding)
+            score = self._cosine_similarity(query_embedding, query_norm, embedding)
             scored.append({**chunk, "score": score})
 
         scored.sort(key=lambda item: item["score"], reverse=True)
@@ -174,9 +176,8 @@ class KnowledgeBase:
 
         return chunks
 
-    def _cosine_similarity(self, left: List[float], right: List[float]) -> float:
+    def _cosine_similarity(self, left: List[float], left_norm: float, right: List[float]) -> float:
         numerator = sum(a * b for a, b in zip(left, right))
-        left_norm = math.sqrt(sum(value * value for value in left))
         right_norm = math.sqrt(sum(value * value for value in right))
         if not left_norm or not right_norm:
             return 0.0
