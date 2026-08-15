@@ -59,6 +59,9 @@ def _emit_speech(args: argparse.Namespace, speech: SpeechProcessor | None, text:
 
 
 def _format_kb_context(results: list[dict]) -> str:
+    if not results:
+        return "No matching knowledge-base passages found."
+
     return "\n\n".join(
         f"Source: {item['source']} (chunk {item['chunk_index']}, score={item['score']:.3f})\n{item['content']}"
         for item in results
@@ -106,6 +109,9 @@ def main():
     if not args.documents and not args.knowledge_base:
         parser.error("Provide at least one --document argument or a --knowledge-base path.")
 
+    if args.query and args.audio_query:
+        parser.error("Use either --query or --audio-query, not both.")
+
     if args.kb_query and not (args.knowledge_base or args.create_knowledge_base):
         parser.error("--kb-query requires --knowledge-base or --create-knowledge-base.")
 
@@ -149,6 +155,7 @@ def main():
             print(f"\nAnswer: {answer}")
             _emit_speech(args, speech, answer)
         except Exception:
+            print("\nLLM answer unavailable. Showing retrieved knowledge-base passages only.")
             _emit_speech(args, speech, context)
         return
 
@@ -167,6 +174,7 @@ def main():
             print(f"\nAnswer: {answer}")
             _emit_speech(args, speech, answer)
         except Exception:
+            print("\nLLM answer unavailable. Showing retrieved knowledge-base passages only.")
             _emit_speech(args, speech, context)
         return
 
