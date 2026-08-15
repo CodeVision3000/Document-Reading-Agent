@@ -8,9 +8,9 @@ This page walks you through every step needed to get the Document Reading Agent 
 
 | Requirement | Minimum Version | Notes |
 |---|---|---|
-| Python | 3.9 | Earlier versions are untested |
-| pip | 21.0 | Comes bundled with Python 3.9+ |
-| OpenAI API key | – | Required for summarisation and Q&A features |
+| Python | 3.10 | Required by Docling |
+| pip | 21.0 | Comes bundled with Python 3.10+ |
+| OpenAI API key | – | Required for summarisation, Q&A, and audio features |
 
 ---
 
@@ -56,8 +56,10 @@ The `requirements.txt` file pins the following packages:
 | `openai` | `>=1.0.0,<2.0.0` | OpenAI API client |
 | `langchain` | `>=0.2.0,<1.0.0` | LLM orchestration framework |
 | `langchain-openai` | `>=0.1.0,<1.0.0` | LangChain ↔ OpenAI integration |
+| `docling` | `>=2.120.1,<3.0.0` | Rich PDF, DOCX, and XLSX parsing |
 | `pypdf` | `>=4.0.0,<5.0.0` | PDF reading support |
 | `python-docx` | `>=1.0.0,<2.0.0` | DOCX reading support |
+| `openpyxl` | `>=3.1.0,<4.0.0` | XLSX fallback reader |
 
 ---
 
@@ -102,15 +104,13 @@ python main.py --help
 
 You should see output similar to:
 
-```
-usage: main.py [-h] --document DOCUMENT [--query QUERY]
-
-Document Reading Agent
-
-options:
-  -h, --help           show this help message and exit
-  --document DOCUMENT  Path to the document to read
-  --query QUERY        Optional question to answer from the document
+```text
+usage: main.py [-h] [--document PATH] [--query QUERY]
+               [--audio-query AUDIO_QUERY] [--transcribe-audio PATH]
+               [--create-knowledge-base PATH] [--knowledge-base PATH]
+               [--kb-query KB_QUERY] [--kb-top-k KB_TOP_K] [--tts-output PATH]
+               [--tts-voice TTS_VOICE] [--tts-model TTS_MODEL]
+               [--stt-model STT_MODEL]
 ```
 
 ---
@@ -119,7 +119,8 @@ options:
 
 | Problem | Solution |
 |---|---|
+| `ModuleNotFoundError: No module named 'docling'` | Run `pip install docling` and ensure you are on Python 3.10+ |
 | `ModuleNotFoundError: No module named 'pypdf'` | Run `pip install pypdf` |
 | `ModuleNotFoundError: No module named 'docx'` | Run `pip install python-docx` |
 | `openai.AuthenticationError` | Check that `OPENAI_API_KEY` is set and valid |
-| Python version errors | Ensure you are using Python 3.9 or later (`python --version`) |
+| Python version errors | Ensure you are using Python 3.10 or later (`python --version`) |

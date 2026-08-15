@@ -32,6 +32,10 @@ class DocumentReader:
         if ext not in self.SUPPORTED_EXTENSIONS:
             raise ValueError(f"Unsupported file format: {ext}. Supported formats: {self.SUPPORTED_EXTENSIONS}")
 
+        docling_text = self._read_with_docling(file_path, ext)
+        if docling_text is not None:
+            return docling_text
+
         if ext == ".txt":
             return self._read_txt(file_path)
         elif ext == ".pdf":
@@ -42,6 +46,27 @@ class DocumentReader:
             return self._read_xlsx(file_path)
 
         raise ValueError(f"Unsupported file format: {ext}")
+
+    def _read_with_docling(self, file_path: str, ext: str) -> str | None:
+        if ext not in {".pdf", ".docx", ".xlsx"}:
+            return None
+
+        try:
+            from docling.datamodel.base_models import ConversionStatus
+            from docling.document_converter import DocumentConverter
+        except ImportError:
+            return None
+
+        try:
+            result = DocumentConverter().convert(file_path)
+        except Exception:
+            return None
+
+        if result.status not in {ConversionStatus.SUCCESS, ConversionStatus.PARTIAL_SUCCESS}:
+            return None
+
+        text = result.document.export_to_markdown(strict_text=True).strip()
+        return text or None
 
     def _read_txt(self, file_path: str) -> str:
         with open(file_path, "r", encoding="utf-8") as f:
